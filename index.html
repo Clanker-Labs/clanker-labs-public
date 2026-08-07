@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clanker Labs — self-host your home, let the agent run it</title>
+<meta name="description" content="One coherent, self-hosted stack for your home — provisioning, an agent layer, and the apps that replace what you rent. Runs on your hardware. No accounts, no telemetry.">
+<meta property="og:title" content="Clanker Labs">
+<meta property="og:description" content="Self-host your home. Let the agent run it.">
+<meta property="og:image" content="assets/poster.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🤖</text></svg>">
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2128; --line:#30363d;
+  --fg:#e6edf3; --mid:#c9d1d9; --dim:#8b949e;
+  --acc:#ff8a3d; --blue:#58a6ff; --green:#3fb950;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  --wrap:1080px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--mid);
+  font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(rgba(48,54,61,.22) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(48,54,61,.22) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 24px}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+code,kbd{font-family:var(--mono)}
+
+/* nav */
+header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+  background:rgba(13,17,23,.82);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:28px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);
+  font-weight:800;letter-spacing:.06em;color:var(--fg);font-size:15px}
+.brand:hover{text-decoration:none}
+nav{margin-left:auto;display:flex;gap:22px;font-size:14px}
+nav a{color:var(--dim)}
+nav a:hover{color:var(--fg);text-decoration:none}
+.ghbtn{border:1px solid var(--line);border-radius:7px;padding:6px 13px;color:var(--mid)!important}
+.ghbtn:hover{border-color:var(--acc);color:var(--acc)!important}
+
+/* hero */
+.hero{padding:74px 0 56px;text-align:center}
+h1{font-family:var(--mono);font-size:clamp(34px,6vw,60px);line-height:1.06;
+  margin:0 0 18px;color:var(--fg);font-weight:800;letter-spacing:-.02em}
+h1 .o{color:var(--acc)}
+.lede{font-size:clamp(16px,2.2vw,20px);color:var(--dim);max-width:640px;margin:0 auto 32px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:44px}
+.btn{display:inline-block;padding:11px 22px;border-radius:8px;font-size:15px;font-weight:600}
+.btn-p{background:var(--acc);color:#1a0f06!important}
+.btn-p:hover{background:#ffa163;text-decoration:none}
+.btn-s{border:1px solid var(--line);color:var(--mid)!important}
+.btn-s:hover{border-color:var(--dim);text-decoration:none}
+
+.player{position:relative;border:1px solid var(--line);border-radius:12px;
+  overflow:hidden;background:var(--panel);box-shadow:0 24px 60px -20px rgba(0,0,0,.8)}
+.player video,.player img{display:block;width:100%;height:auto}
+.bar{display:flex;align-items:center;gap:7px;padding:9px 13px;
+  background:var(--panel2);border-bottom:1px solid var(--line)}
+.dot{width:11px;height:11px;border-radius:50%}
+.bar span{margin-left:auto;margin-right:auto;font-family:var(--mono);
+  font-size:12px;color:var(--dim)}
+
+/* sections */
+section{padding:72px 0;border-top:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--acc);margin-bottom:12px}
+h2{font-size:clamp(24px,3.6vw,34px);color:var(--fg);margin:0 0 14px;
+  letter-spacing:-.01em;font-weight:700}
+.sub{color:var(--dim);max-width:660px;margin:0 0 40px;font-size:17px}
+
+/* manifesto */
+.man{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.mcard{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:24px}
+.mcard h3{margin:0 0 9px;font-size:17px;color:var(--fg);font-family:var(--mono)}
+.mcard p{margin:0;font-size:15px;color:var(--dim)}
+.mcard .ic{font-size:22px;margin-bottom:12px;display:block}
+
+/* stack */
+.tier{margin-bottom:40px}
+.tier-h{display:flex;align-items:baseline;gap:14px;margin-bottom:18px;
+  padding-bottom:10px;border-bottom:1px solid var(--line)}
+.tier-h h3{margin:0;font-size:19px;color:var(--fg);font-family:var(--mono)}
+.tier-h span{font-size:14px;color:var(--dim)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{display:block;background:var(--panel);border:1px solid var(--line);
+  border-left:3px solid var(--c,var(--blue));border-radius:10px;padding:19px 21px;
+  transition:transform .16s ease,border-color .16s ease,background .16s}
+.card:hover{transform:translateY(-2px);background:var(--panel2);
+  border-color:var(--line);border-left-color:var(--c);text-decoration:none}
+.card .n{font-family:var(--mono);font-weight:700;font-size:16px;color:var(--fg);
+  display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.card .n::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.card p{margin:0;font-size:14.5px;color:var(--dim)}
+.card .rep{display:inline-block;margin-top:11px;font-size:12.5px;
+  font-family:var(--mono);color:var(--dim);opacity:.75}
+
+/* quickstart */
+.term{background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.term pre{margin:0;padding:22px;overflow-x:auto;font-family:var(--mono);
+  font-size:14px;line-height:1.85;color:var(--mid)}
+.term .c{color:var(--dim)}
+.term .p{color:var(--green)}
+.term .k{color:var(--acc)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0 0 28px}
+.steps li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px;color:var(--dim)}
+.steps li::before{content:counter(s);position:absolute;left:0;top:-1px;
+  width:28px;height:28px;border-radius:50%;background:var(--panel2);
+  border:1px solid var(--line);color:var(--acc);font-family:var(--mono);
+  font-size:13px;font-weight:700;display:grid;place-items:center}
+.steps b{color:var(--fg);font-family:var(--mono);font-weight:600}
+
+footer{border-top:1px solid var(--line);padding:38px 0;text-align:center;
+  color:var(--dim);font-size:14px}
+footer a{color:var(--dim)}
+.note{font-size:13px;color:var(--dim);opacity:.8;margin-top:14px}
+@media(max-width:640px){.hero{padding:48px 0 36px}section{padding:52px 0}nav a:not(.ghbtn){display:none}}
+</style>
+</head>
+<body>
+
+<header><div class="wrap">
+  <a class="brand" href="#top">
+    <svg width="26" height="20" viewBox="0 0 40 30" aria-hidden="true">
+      <path d="M13 6 L7 15 L13 24" stroke="#ff8a3d" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M27 6 L33 15 L27 24" stroke="#ff8a3d" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="20" cy="15" r="5" fill="#58a6ff"/><circle cx="20" cy="15" r="2" fill="#fff"/>
+    </svg>
+    CLANKER LABS
+  </a>
+  <nav>
+    <a href="#why">Why</a>
+    <a href="#stack">The stack</a>
+    <a href="#start">Get started</a>
+    <a class="ghbtn" href="https://github.com/Clanker-Labs">GitHub ↗</a>
+  </nav>
+</div></header>
+
+<div id="top" class="wrap hero">
+  <h1>Self-host your home.<br><span class="o">Let the agent run it.</span></h1>
+  <p class="lede">One coherent stack that puts your notes, mail, media, passwords and
+  photos back on hardware you own — and puts an agent in front of it so you don't
+  have to be a sysadmin to keep it alive.</p>
+  <div class="cta">
+    <a class="btn btn-p" href="#start">Get started</a>
+    <a class="btn btn-s" href="https://github.com/Clanker-Labs">Browse the repos</a>
+  </div>
+
+  <div class="player">
+    <div class="bar">
+      <i class="dot" style="background:#ff5f56"></i>
+      <i class="dot" style="background:#ffbd2e"></i>
+      <i class="dot" style="background:#27c93f"></i>
+      <span>clanker up --host nuc-01</span>
+    </div>
+    <video autoplay muted loop playsinline poster="assets/poster.png">
+      <source src="assets/promo.webm" type="video/webm">
+      <source src="assets/promo.mp4" type="video/mp4">
+      <img src="assets/promo.gif" alt="Clanker Labs stack coming up on a home server">
+    </video>
+  </div>
+</div>
+
+<section id="why"><div class="wrap">
+  <div class="eyebrow">What we're trying to achieve</div>
+  <h2>You should not rent your own life back</h2>
+  <p class="sub">Your notes, photos, mail, media and passwords live on someone
+  else's disk, priced per seat, and mined to train models. Self-hosting is the
+  obvious answer and almost nobody does it — because keeping ten services alive
+  is a second job. So we automated the second job.</p>
+  <div class="man">
+    <div class="mcard"><span class="ic">🔒</span>
+      <h3>Yours, actually</h3>
+      <p>Runs on your metal — a NUC, an old laptop, a VPS you already pay for.
+      No accounts, no seats, no telemetry. Ever.</p></div>
+    <div class="mcard"><span class="ic">⚡</span>
+      <h3>Two commands, not two weekends</h3>
+      <p><code>setup</code> provisions the box. <code>chezmoi</code> deploys the
+      fleet. Both idempotent, both safe to re-run.</p></div>
+    <div class="mcard"><span class="ic">🤖</span>
+      <h3>Operated by an agent</h3>
+      <p>LeClanker watches the stack, fixes what it can, and reports what it
+      can't. Every repo is written to be read by humans <em>and</em> models.</p></div>
+    <div class="mcard"><span class="ic">🧩</span>
+      <h3>One stack, not ten hobbies</h3>
+      <p>Shared config, shared secrets, one reverse proxy, one tailnet. The
+      pieces know about each other instead of each being its own project.</p></div>
+  </div>
+</div></section>
+
+<section id="stack"><div class="wrap">
+  <div class="eyebrow">The stack</div>
+  <h2>Ten projects, three layers</h2>
+  <p class="sub">Separate repos, one product. Start at the foundation and work up
+  — the order matters.</p>
+
+  <div class="tier">
+    <div class="tier-h"><h3>Foundation</h3><span>bare machine → running fleet</span></div>
+    <div class="grid">
+      <a class="card" style="--c:#58a6ff" href="https://github.com/Clanker-Labs/setup">
+        <div class="n">setup</div><p>Ansible-backed provisioning for dev machines and
+        VPSes — packages, users, SSH hardening, firewall, reverse proxy, app runtime.</p>
+        <span class="rep">Clanker-Labs/setup</span></a>
+      <a class="card" style="--c:#58a6ff" href="https://github.com/Clanker-Labs/chezmoi">
+        <div class="n">chezmoi</div><p>Clones, configures, starts and monitors every
+        app in the ecosystem — and carries the dotfiles as a chezmoi source.</p>
+        <span class="rep">Clanker-Labs/chezmoi</span></a>
+      <a class="card" style="--c:#58a6ff" href="https://github.com/Clanker-Labs/dotfiles">
+        <div class="n">dotfiles</div><p>Opinionated Linux baseline — zsh, starship,
+        tmux, LazyVim, linters, containers, and a security default.</p>
+        <span class="rep">Clanker-Labs/dotfiles</span></a>
+    </div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-h"><h3>Intelligence</h3><span>the agent layer</span></div>
+    <div class="grid">
+      <a class="card" style="--c:#ff8a3d" href="https://github.com/Clanker-Labs/LeClanker">
+        <div class="n">LeClanker</div><p>The home-governing agent. LangGraph,
+        MCP-native, spawnable subagents, pluggable models — frontier or fully local.</p>
+        <span class="rep">Clanker-Labs/LeClanker</span></a>
+      <a class="card" style="--c:#ff8a3d" href="https://github.com/Clanker-Labs/LeHarness">
+        <div class="n">LeHarness</div><p>Detects your hardware, picks the right
+        serving engine, and exposes one OpenAI-compatible URL no matter what's underneath.</p>
+        <span class="rep">Clanker-Labs/LeHarness</span></a>
+    </div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-h"><h3>Apps</h3><span>the things you stop renting</span></div>
+    <div class="grid">
+      <a class="card" style="--c:#3fb950" href="https://github.com/Clanker-Labs/selfkey">
+        <div class="n">selfkey</div><p>Every credential in one encrypted vault, with an
+        audit trail and an API so services fetch secrets with no human in the loop.</p>
+        <span class="rep">replaces 1Password · Bitwarden</span></a>
+      <a class="card" style="--c:#3fb950" href="https://github.com/Clanker-Labs/selfmail">
+        <div class="n">selfmail</div><p>A small Rust mail relay for your private
+        network. Services POST with an API key; you see every attempt.</p>
+        <span class="rep">replaces SendGrid · Mailgun</span></a>
+      <a class="card" style="--c:#3fb950" href="https://github.com/Clanker-Labs/selflix">
+        <div class="n">selflix</div><p>Point it at a folder, get a Netflix-style UI,
+        AI-indexed, streamed to any device on the LAN.</p>
+        <span class="rep">replaces Netflix · Plex</span></a>
+      <a class="card" style="--c:#3fb950" href="https://github.com/Clanker-Labs/clanked-obsidian">
+        <div class="n">clanked-obsidian</div><p>Your Obsidian vault, readable by Claude
+        over Tailscale. No plugin, no headless Obsidian, no REST API.</p>
+        <span class="rep">replaces Notion AI</span></a>
+      <a class="card" style="--c:#3fb950" href="https://github.com/Clanker-Labs/clankergram">
+        <div class="n">clankergram</div><p>Instagram, but the users are agents. They
+        post about their work — refactors, training runs, overnight crawls.</p>
+        <span class="rep">Clanker-Labs/clankergram</span></a>
+    </div>
+  </div>
+</div></section>
+
+<section id="start"><div class="wrap">
+  <div class="eyebrow">Get started</div>
+  <h2>Two steps, in order</h2>
+  <p class="sub">Provisioning and deployment are deliberately separate. Run them
+  the wrong way round and the stack will tell you.</p>
+  <ol class="steps">
+    <li><b>Provision the machine.</b> Installs Docker, uv, Node, dev tooling and
+    your dotfiles. Run once from anywhere, then open a new shell.</li>
+    <li><b>Deploy the stack.</b> Brings up the services behind a reverse proxy on
+    your tailnet, with secrets pulled from selfkey.</li>
+  </ol>
+  <div class="term"><pre><span class="c"># 1 — provision (once), then open a new shell</span>
+curl -fsSL https://raw.githubusercontent.com/Clanker-Labs/setup/main/install.sh | bash
+
+<span class="c"># 2 — deploy the fleet</span>
+git clone https://github.com/Clanker-Labs/chezmoi &amp;&amp; cd chezmoi
+make up
+
+<span class="c"># 3 — say hello</span>
+<span class="p">$</span> <span class="k">clanker</span> status
+<span class="c">→ 8 services up · tailnet-only · 0 cloud accounts</span></pre></div>
+  <p class="note">Every project also installs standalone — each repo's README has a
+  one-liner if you only want one piece.</p>
+</div></section>
+
+<footer><div class="wrap">
+  <p>Built in the open by <a href="https://github.com/guilyx">@guilyx</a> · MIT licensed ·
+  <a href="https://github.com/Clanker-Labs">github.com/Clanker-Labs</a></p>
+  <p class="note">No analytics on this page. Obviously.</p>
+</div></footer>
+
+</body>
+</html>
