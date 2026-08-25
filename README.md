@@ -1,56 +1,68 @@
 # clanker-labs-public
 
 The public site for [Clanker Labs](https://github.com/Clanker-Labs) — what we're
-building, the ten projects, and how to get the stack running.
+building, why, and the twenty-one apps it currently runs.
 
 **Live:** <https://clanker-labs.github.io/clanker-labs-public/>
 
 ## What's here
 
 ```
-index.html              single-page site, no build step, no dependencies
-assets/promo.mp4        promo video (h264, 12s, loops)
-assets/promo.webm       same, VP9 — served first, smaller
-assets/promo.gif        same, for the org profile README (GitHub can't play video)
-assets/poster.png       video poster + og:image
-.github/workflows/      Pages deploy on push to main
+index.html                  single page, no build step, no dependencies
+assets/promo.*              the hero animation (mp4 + webm + gif)
+assets/demo-checks.*        `make checks` running, from real output
+assets/demo-agent.*         an idea captured from a chat, from a real exchange
+assets/*-poster.png         final frames — also what reduced-motion viewers get
+tools/promo.py              generates the hero animation
+tools/demos.py              generates the two demo animations
+.github/workflows/          Pages deploy on push to main
 ```
 
 No framework, no bundler, no analytics. Edit `index.html` and push.
 
-## Regenerating the promo
+## Two rules for this page
 
-The animation is generated from `promo.py` (kept in this repo under `tools/`).
-It renders 247 PNG frames and encodes three formats:
+**Nothing here links to a repo a visitor cannot open.** Most of the stack is
+private. Those are described and marked `private` rather than linked, because a
+promo page whose "browse the repos" button 404s is worse than one that admits
+the repos are closed. When a repo goes public, swap its `<div class="card">` for
+an `<a class="card" href="…">` and drop the tag.
 
-```bash
-python3 tools/promo.py frames
+**Nothing here shows a command that does not exist.** An earlier version of this
+page had a `clanker up --host nuc-01` in the hero and a `clanker status` in the
+footer. There is no `clanker` binary. Invented UI in a promo reads as a lie the
+moment somebody tries it, and everything else on the page inherits the doubt.
 
-# GIF for the org README — palette-optimised, ~1.3 MB
-ffmpeg -y -framerate 20 -i frames/f%04d.png \
-  -vf "scale=900:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4" \
-  -loop 0 assets/promo.gif
+## The demos are recordings, not mockups
 
-# MP4 + WebM for the site
-ffmpeg -y -framerate 20 -i frames/f%04d.png -c:v libx264 -pix_fmt yuv420p \
-  -crf 20 -movflags +faststart assets/promo.mp4
-ffmpeg -y -framerate 20 -i frames/f%04d.png -c:v libvpx-vp9 -crf 34 -b:v 0 \
-  -pix_fmt yuv420p assets/promo.webm
-```
+`tools/demos.py` plays back output captured from a running box — `make checks`
+really does print those eleven rows, three of them failing, and the agent really
+did file that idea. The only edits are redactions: a tailnet hostname and a home
+directory are not things to publish on a page anyone can read.
 
-Requires `ffmpeg`, Python 3 with Pillow, and JetBrains Mono Nerd Font (falls
-back to DejaVu Sans Mono).
-
-To change what the promo shows, edit `PRODUCTS` and `LOG` at the top of
-`promo.py` — the terminal scene and the card grid both read from them.
-
-## Local preview
+The failures are kept deliberately. A demo where everything passes is a demo
+nobody believes, and "the drive is not mounted" is a better advertisement for
+the checks than a wall of green.
 
 ```bash
-python3 -m http.server 8080
-# http://localhost:8080
+python3 tools/demos.py checks frames-checks
+ffmpeg -y -framerate 20 -i frames-checks/f%04d.png -c:v libx264 -pix_fmt yuv420p \
+  -crf 20 -movflags +faststart assets/demo-checks.mp4
+ffmpeg -y -framerate 20 -i frames-checks/f%04d.png -c:v libvpx-vp9 -crf 34 -b:v 0 \
+  -pix_fmt yuv420p assets/demo-checks.webm
+cp frames-checks/$(ls frames-checks | tail -1) assets/demo-checks-poster.png
 ```
 
-## License
+Same for `agent`. Re-capture the source output before regenerating if the
+scripts have changed — the point of these is that they are true.
 
-MIT
+## Brand
+
+Palette, mark, typography and voice come from
+[Clanker-Labs/branding](https://github.com/Clanker-Labs/branding) — the
+Porchlight system. The CSS variables at the top of `index.html` are a copy of
+`tokens.json`; if the two disagree, branding wins.
+
+`tools/promo.py` predates Porchlight and still uses the older orange. It has not
+been retrofitted because regenerating the hero would change a file nobody asked
+to change.
