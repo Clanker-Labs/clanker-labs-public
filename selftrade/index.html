@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>selftrade — a backtest that argues with you</title>
+<meta name="description" content="A backtester built to be able to say no. It ships with a strategy that lost 0.245R per trade, and leads with that number.">
+<meta property="og:title" content="selftrade">
+<meta property="og:description" content="A backtest is a machine for producing encouraging numbers. This one is built to say no.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23181b19'/%3E%3Cpath d='M12 8.5H9.5v15H12M20 8.5h2.5v15H20' fill='none' stroke='%23e79a4b' stroke-width='2.4' opacity='.55'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='%23e79a4b'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:"Archivo";src:url("fonts/archivo-latin.woff2") format("woff2");
+  font-weight:100 900;font-display:swap}
+@font-face{font-family:"Archivo Narrow";src:url("fonts/archivo-narrow-latin.woff2") format("woff2");
+  font-weight:100 900;font-display:swap}
+@font-face{font-family:"Source Serif 4";src:url("fonts/source-serif-4-latin-wght.woff2") format("woff2");
+  font-weight:200 900;font-display:swap}
+@font-face{font-family:"JetBrains Mono";src:url("fonts/jetbrains-mono-latin.woff2") format("woff2");
+  font-weight:100 800;font-display:swap}
+:root{
+  --bg:#101211; --raised:#181b19; --line:#272b28;
+  --heading:#e9ebe7; --body:#a9aea8; --muted:#7e847e; --faint:#636963;
+  --accent:#e79a4b; --accent-soft:rgba(231,154,75,.08);
+  --up:#6fbf8b; --warn:#e0b341; --down:#d4695f;
+  --display:"Archivo",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --label:"Archivo Narrow","Archivo",ui-sans-serif,sans-serif;
+  --prose:"Source Serif 4",ui-serif,Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --swift:cubic-bezier(.645,.045,.355,1);
+  --measure:68ch;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--body);font-family:var(--display);
+  font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+h1,h2,h3{color:var(--heading);font-weight:600;line-height:1.2;margin:0}
+p{margin:0 0 1.1em;max-width:var(--measure)}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(231,154,75,.3);
+  transition:border-color .18s var(--swift)}
+a:hover{border-bottom-color:var(--accent)}
+strong{color:var(--heading);font-weight:600}
+em{font-style:italic}
+code{font-family:var(--mono);font-size:.88em;color:var(--heading);background:var(--raised);
+  border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.eyebrow{font-family:var(--label);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:14px}
+
+nav{position:sticky;top:0;z-index:20;background:rgba(16,18,17,.92);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:12px;height:60px}
+nav .name{font-family:var(--label);font-size:19px;color:var(--heading)}
+nav .sp{flex:1}
+nav a{font-family:var(--label);font-size:13px;letter-spacing:.04em;color:var(--muted);
+  border:0;text-transform:uppercase}
+nav a:hover{color:var(--accent)}
+
+header.hero{padding:88px 0 64px;border-bottom:1px solid var(--line)}
+h1{font-size:clamp(2.6rem,7vw,4.2rem);letter-spacing:-.02em}
+.lede{font-family:var(--prose);font-size:clamp(1.15rem,2.4vw,1.4rem);color:var(--body);
+  max-width:58ch;margin:22px 0 0;line-height:1.5}
+.lede strong{color:var(--heading)}
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
+.badge{font-family:var(--label);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid var(--line);border-radius:3px;padding:5px 11px;color:var(--muted)}
+.badge.safe{color:var(--up);border-color:rgba(111,191,139,.35)}
+.badge.priv{color:var(--warn);border-color:rgba(224,179,65,.3)}
+
+.player{margin:44px 0 0;border:1px solid var(--line);border-radius:6px;overflow:hidden;
+  background:var(--raised)}
+.player video{display:block;width:100%;height:auto}
+.player .cap{font-family:var(--mono);font-size:12px;color:var(--faint);padding:11px 16px;
+  border-top:1px solid var(--line)}
+
+section{padding:72px 0;border-bottom:1px solid var(--line)}
+section h2{font-size:clamp(1.6rem,3.4vw,2.1rem);margin-bottom:8px;letter-spacing:-.01em}
+section .sub{color:var(--muted);margin-bottom:34px;max-width:var(--measure)}
+
+/* Two columns, not auto-fit: there are exactly four of these and auto-fit
+   lands on three at desktop width, orphaning the fourth beside an empty cell. */
+.lies{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+@media (max-width:640px){.lies{grid-template-columns:1fr}}
+.lies>div{background:var(--raised);padding:24px}
+.lies h3{font-size:1rem;margin-bottom:10px;color:var(--down)}
+.lies p{font-size:14.5px;margin:0}
+.lies .fix{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);
+  font-size:13.5px;color:var(--up)}
+
+figure{margin:0}
+.chart{background:var(--raised);border:1px solid var(--line);border-radius:5px;padding:18px;
+  overflow-x:auto}
+.chart img{display:block;width:100%;height:auto;max-width:840px;margin:0 auto}
+figcaption{font-size:13.5px;color:var(--faint);margin-top:14px;max-width:var(--measure)}
+
+table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:13.5px;
+  margin-top:8px}
+th{font-family:var(--label);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);text-align:left;font-weight:400;padding:9px 14px;
+  border-bottom:1px solid var(--line)}
+th.r,td.r{text-align:right}
+td{padding:9px 14px;border-bottom:1px solid rgba(39,43,40,.6);color:var(--body)}
+tr.total td{color:var(--heading);border-bottom:0;border-top:1px solid var(--line);
+  padding-top:14px}
+.neg{color:var(--down)} .pos{color:var(--up)}
+.scroll{overflow-x:auto}
+
+.term{background:#0c0e0d;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.term .bar{display:flex;align-items:center;gap:7px;padding:10px 14px;
+  border-bottom:1px solid var(--line);background:var(--raised)}
+.term .bar i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
+.term .bar span{font-family:var(--mono);font-size:11px;color:var(--faint);margin-left:6px}
+.term pre{margin:0;padding:20px 22px;overflow-x:auto;font-family:var(--mono);font-size:13px;
+  line-height:1.75;color:var(--body)}
+.term .p{color:var(--accent)} .term .hl{color:var(--heading)}
+.term .dim{color:var(--faint)} .term .w{color:var(--warn)} .term .d{color:var(--down)}
+
+.guard{border:1px solid var(--line);border-left:3px solid var(--warn);background:var(--raised);
+  border-radius:4px;padding:24px 26px;max-width:var(--measure)}
+.guard h3{color:var(--warn);font-family:var(--label);font-size:13px;letter-spacing:.08em;
+  text-transform:uppercase;margin-bottom:12px}
+.guard p{font-size:14.5px}
+.guard p:last-child{margin-bottom:0}
+
+footer{padding:56px 0 72px;color:var(--faint);font-size:13.5px}
+footer .row{display:flex;gap:26px;flex-wrap:wrap;align-items:center;margin-top:26px}
+footer a{color:var(--muted);border:0}
+footer a:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true">
+    <path d="M12 6.5H7.5v19H12M20 6.5h4.5v19H20" fill="none" stroke="#e79a4b"
+      stroke-width="2.4" opacity=".55"/><circle cx="16" cy="16" r="3.5" fill="#e79a4b"/>
+  </svg>
+  <span class="name">selftrade</span>
+  <span class="sp"></span>
+  <a href="#lies">The four lies</a>
+  <a href="#result">What it found</a>
+  <a href="#live">Going live</a>
+  <a href="../">Clanker Labs</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">Clanker Labs · private repo</div>
+  <h1>selftrade</h1>
+  <p class="lede">A backtest is a machine for producing encouraging numbers.
+  Point a naive one at any strategy and it will tell you the strategy works.
+  <strong>This one is built to say no.</strong></p>
+  <div class="badges">
+    <span class="badge safe">paper by default</span>
+    <span class="badge">43 tests</span>
+    <span class="badge priv">source not public</span>
+  </div>
+
+  <div class="player">
+    <video controls muted playsinline preload="metadata" poster="media/poster.png">
+      <source src="media/demo.mp4" type="video/mp4">
+      Your browser cannot play this video.
+    </video>
+    <div class="cap">Every number in this animation is from a real run —
+      64 trades, the actual equity curve, the verdict the tool actually returned.</div>
+  </div>
+</div></header>
+
+<section id="lies"><div class="wrap">
+  <div class="eyebrow">The problem</div>
+  <h2>Four ways a backtest lies</h2>
+  <p class="sub">Left alone, the default implementation of every step quietly
+  resolves ambiguity in the strategy's favour. Three of these are fixable in
+  code. The fourth is only fixable in how you report.</p>
+
+  <div class="lies">
+    <div>
+      <h3>Look-ahead</h3>
+      <p>A signal computed from a bar's close, filled at that same bar's open.
+      One bar of clairvoyance and the equity curve is beautiful.</p>
+      <div class="fix">A signal can only fill on the <em>next</em> bar's open,
+      and the API makes it awkward to do otherwise.</div>
+    </div>
+    <div>
+      <h3>Fills at prices nobody traded</h3>
+      <p>A stop that fills exactly at the stop price assumes somebody was
+      standing there. Capping every loss at −1R deletes tail risk from the
+      curve entirely.</p>
+      <div class="fix">Gaps through a stop fill at the gap. Gaps through a
+      target still fill at the target — asymmetric on purpose, because the
+      orders that get run past are resting stops.</div>
+    </div>
+    <div>
+      <h3>One good period</h3>
+      <p>"62% win rate" over eleven trades is not a win rate. It is seven
+      trades.</p>
+      <div class="fix">Every result carries its window and its trade count, and
+      the tool computes the odds a coin weighted to break even would have done
+      as well.</div>
+    </div>
+    <div>
+      <h3>Optimising until it works</h3>
+      <p>The best cell in a grid of twenty, on a sample of twenty trades, is the
+      cell that fit the noise best. That is what "best" means at that size.</p>
+      <div class="fix">The sweep reports the <em>plateau</em> — what fraction of
+      the grid was profitable — above the winning cell.</div>
+    </div>
+  </div>
+</div></section>
+
+<section id="result"><div class="wrap">
+  <div class="eyebrow">What it found</div>
+  <h2>The strategy it ships with lost money</h2>
+  <p class="sub">The 15-minute opening range breakout, transcribed from source
+  rather than from folklore. Scored across five instruments over the 29 days of
+  one-minute data free feeds will serve.</p>
+
+  <div class="scroll"><table>
+    <thead><tr><th>instrument</th><th class="r">trades</th><th class="r">win rate</th>
+      <th class="r">expectancy</th></tr></thead>
+    <tbody>
+      <tr><td>QQQ</td><td class="r">9</td><td class="r">11%</td><td class="r neg">−0.817R</td></tr>
+      <tr><td>SPY</td><td class="r">14</td><td class="r">29%</td><td class="r neg">−0.130R</td></tr>
+      <tr><td>IWM</td><td class="r">14</td><td class="r">36%</td><td class="r pos">+0.021R</td></tr>
+      <tr><td>NVDA</td><td class="r">14</td><td class="r">43%</td><td class="r pos">+0.046R</td></tr>
+      <tr><td>TSLA</td><td class="r">13</td><td class="r">15%</td><td class="r neg">−0.574R</td></tr>
+      <tr class="total"><td>pooled</td><td class="r">64</td><td class="r">28%</td>
+        <td class="r neg">−0.245R</td></tr>
+    </tbody>
+  </table></div>
+
+  <p style="margin-top:26px">Break-even at 1:3 is 25%, so 28% sounds survivable
+  until the losers turn out to be full stops and the winners mostly time out
+  flat. Read it with the caveats attached, because they are load-bearing: one
+  month, one market regime, and only 60% of the instruments agree in sign —
+  which means the pooled figure is partly an average of unrelated results.</p>
+
+  <figure style="margin-top:34px">
+    <div class="chart"><img src="media/equity.svg"
+      alt="Equity curve in R across 64 trades, falling steadily from 0 to −15.7R, with the area between the curve and its running peak shaded."></div>
+    <figcaption>Cumulative return in R — units of the risk taken, the only unit
+    that compares across instruments. The shaded area is the distance below the
+    running peak: the drawdown you would have had to sit through, which an
+    equity line alone makes invisible.</figcaption>
+  </figure>
+</div></section>
+
+<section id="honest"><div class="wrap">
+  <div class="eyebrow">The output</div>
+  <h2>What "no" looks like</h2>
+  <p class="sub">Three checks, and a sign test that settles a question worth
+  settling.</p>
+
+  <div class="term">
+    <div class="bar"><i></i><i></i><i></i><span>selftrade run QQQ</span></div>
+<pre><span class="p">$</span> <span class="hl">selftrade run QQQ</span>
+
+ <span class="dim">sessions</span>       21 (12 with no setup)
+ <span class="dim">trades</span>         9
+ <span class="dim">win rate</span>       11% (break-even is 25%)
+ <span class="dim">expectancy</span>     <span class="d">-0.817R per trade</span>
+ <span class="dim">exits</span>          1× session end, 8× stop
+
+<span class="w">Not evidence yet:</span>
+  • 9 trades is below the 30 needed to say anything. Every number
+    here is an anecdote.
+  • a coin weighted to break even produces a run this good 92% of
+    the time. That is not a signal.
+  • expectancy is not positive: it lost money on this sample.
+
+<span class="dim">Sign check: mirrored, the same trades score +0.817R. A weak rule
+mirrors to roughly break-even; a large, symmetric flip means the
+direction logic is inverted -- a bug, not a strategy.</span></pre>
+  </div>
+
+  <p style="margin-top:30px">That last check earned its place the hard way. The
+  first version of this strategy lost in every configuration, with win rates
+  <em>below</em> random for its payoff — and the mirrored trades came back
+  large and symmetric, which reads exactly like an inverted signal. It was not.
+  It was four bugs in the harness, and the flip was the symptom.</p>
+
+  <p>The stop was the interesting one. "20 to 25 points" is a fact about Nasdaq
+  futures, where the index trades near 20,000. Copied onto a $600 ETF it is a 4%
+  stop that never triggers; scaled to keep the percentage it becomes 0.6, which
+  sits <em>inside</em> one-minute noise — the 90th-percentile minute spans about
+  0.8 — so it is hit by the bar you entered on, at random. Thirteen consecutive
+  stops at −1.02R, and it reads as a broken strategy rather than a broken
+  measurement.</p>
+</div></section>
+
+<section id="live"><div class="wrap">
+  <div class="eyebrow">Execution</div>
+  <h2>Paper by default. Live is never inferred.</h2>
+  <p class="sub">Two independent switches, and the failure being defended
+  against is not you changing your mind.</p>
+
+  <div class="term" style="margin-bottom:32px">
+    <div class="bar"><i></i><i></i><i></i><span>arming live</span></div>
+<pre><span class="dim"># 1. at the call site</span>
+broker = HyperliquidBroker(address=..., <span class="hl">live=True</span>)
+
+<span class="dim"># 2. in the shell that is placing orders</span>
+<span class="p">$</span> <span class="hl">export SELFTRADE_ARM_LIVE=i-understand-this-sends-real-orders</span>
+
+<span class="dim"># either one alone:</span>
+<span class="d">NotArmed: live=True was requested but the environment is not armed.</span></pre>
+  </div>
+
+  <div class="guard">
+    <h3>Why two</h3>
+    <p>The thing being defended against is a cron entry, a script, or an agent
+    inheriting an environment it did not read. The environment variable has
+    exactly one purpose, so nothing can arm it as a side effect of doing
+    something else — and the check runs at the moment of sending, so a broker
+    built while armed cannot keep sending after the environment is disarmed.</p>
+    <p>Order placement on Hyperliquid is deliberately <strong>not
+    implemented</strong>. Signing means the account key in-process, and a
+    hand-rolled EIP-712 signer gets it subtly wrong and sends a valid signature
+    for an order nobody meant. Reads are genuine and need no key.</p>
+    <p>The dashboard is read-only by construction: no route takes a side or a
+    size, and it does not import anything that can send. A dashboard that can be
+    reached is a dashboard that can be reached by something other than you, and
+    the safe design is one where the worst outcome of that is a stale chart.</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <p><strong>The source is private.</strong> This page describes it; there is no
+  repository link because there is no public repository. It is one of the
+  private tools in the Clanker Labs house stack.</p>
+  <p style="color:var(--muted)">Nothing here is financial advice, nothing here
+  is a recommendation, and the strategy it ships with lost money over the window
+  it was tested on. That is the point of the tool, not an omission from the
+  pitch.</p>
+  <div class="row">
+    <span>Clanker Labs</span>
+    <a href="../">The rest of the stack</a>
+    <a href="https://clanker-labs.github.io/tradesights/">tradesights</a>
+  </div>
+</div></footer>
+
+</body>
+</html>
