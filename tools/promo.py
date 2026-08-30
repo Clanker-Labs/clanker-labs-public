@@ -10,13 +10,16 @@ FPS = 20
 OUT = sys.argv[1] if len(sys.argv) > 1 else "frames"
 os.makedirs(OUT, exist_ok=True)
 
-BG = (13, 17, 23)
-PANEL = (22, 27, 34)
-FG = (201, 209, 217)
-DIM = (110, 118, 129)
-ACC = (255, 138, 61)      # clanker orange
-ACC2 = (88, 166, 255)     # blue
-OK = (63, 185, 80)
+# Chain Teal, as RGB byte tuples for Pillow — see Clanker-Labs/branding.
+# This file used to carry a third palette (GitHub greys under "clanker orange")
+# that predated the brand system entirely.
+BG = (0x0F, 0x14, 0x19)      # --color-bg
+PANEL = (0x17, 0x1D, 0x26)   # --color-bg-raised
+FG = (0xE8, 0xED, 0xF2)      # --color-heading
+DIM = (0x7C, 0x88, 0x96)     # --color-muted
+ACC = (0x00, 0xD4, 0xAA)     # --color-accent
+ACC2 = (0x00, 0xA8, 0x88)    # --color-accent-dim
+OK = (0x4A, 0xDE, 0x80)      # --color-up
 
 FONTS = "/home/wardn/.local/share/fonts/"
 def font(name, size):

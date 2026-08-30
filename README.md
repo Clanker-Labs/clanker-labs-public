@@ -59,10 +59,17 @@ scripts have changed — the point of these is that they are true.
 ## Brand
 
 Palette, mark, typography and voice come from
-[Clanker-Labs/branding](https://github.com/Clanker-Labs/branding) — the
-Porchlight system. The CSS variables at the top of `index.html` are a copy of
-`tokens.json`; if the two disagree, branding wins.
+[Clanker-Labs/branding](https://github.com/Clanker-Labs/branding) — Chain Teal
+on Midnight Navy, adopted from Unchained Labs. The CSS variables at the top of
+`index.html` are a copy of `tokens.json`; if the two disagree, branding wins.
 
-`tools/promo.py` predates Porchlight and still uses the older orange. It has not
-been retrofitted because regenerating the hero would change a file nobody asked
-to change.
+**`tools/promo.py` is aligned in source but its output is not yet rebuilt.** The
+constants now read the brand tokens, replacing a third palette ("clanker
+orange" over GitHub greys) that predated the brand system. The committed
+`assets/promo.mp4`, `promo.webm` and `poster.png` are still the old render, so
+the hero on this page is orange while everything around it is teal.
+
+Rebuilding needs `JetBrainsMonoNerdFont-ExtraBold.ttf` on the box. Without it
+`font()` silently falls back to DejaVu Sans Mono and the hero re-renders in the
+wrong face — which is worse than the colour being stale, and is why this was
+not regenerated blind.
