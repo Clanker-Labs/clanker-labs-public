@@ -19,7 +19,7 @@ believe without seeing:
             app opened. That is the whole point of the agent layer and it takes
             nine seconds to show.
 
-Porchlight tokens throughout (see the branding repo). The older promo.py in this
+the brand tokens throughout (see the branding repo). The older promo.py in this
 directory predates the brand and uses a different orange; it has not been
 retrofitted because regenerating it would change a file nobody asked to change.
 
@@ -33,21 +33,22 @@ from PIL import Image, ImageDraw, ImageFont
 W, H = 1000, 620
 FPS = 20
 
-# --- Porchlight -------------------------------------------------------------
-BG       = (0x10, 0x12, 0x11)
-RAISED   = (0x18, 0x1b, 0x19)
-LINE     = (0x27, 0x2b, 0x28)
-HEADING  = (0xe9, 0xeb, 0xe7)
-BODY     = (0xa9, 0xae, 0xa8)
+# --- Chain Teal -------------------------------------------------------------
+#: RGB byte tuples for Pillow. A grep for the hex string will not find these.
+BG       = (0x0F, 0x14, 0x19)
+RAISED   = (0x17, 0x1D, 0x26)
+LINE     = (0x23, 0x2B, 0x35)
+HEADING  = (0xE8, 0xED, 0xF2)
+BODY     = (0xA8, 0xB3, 0xBF)
 #: One step up from the panel. RAISED is the window's own fill, so a bubble
 #: painted in it is a bubble you cannot see -- the first render had the incoming
 #: messages reading as loose text floating in the frame.
-BUBBLE   = (0x23, 0x27, 0x24)
-MUTED    = (0x7e, 0x84, 0x7e)
-FAINT    = (0x63, 0x69, 0x63)
-ACCENT   = (0xe7, 0x9a, 0x4b)
-UP       = (0x6f, 0xbf, 0x8b)
-DOWN     = (0xd4, 0x69, 0x5f)
+BUBBLE   = (0x1E, 0x27, 0x32)
+MUTED    = (0x7C, 0x88, 0x96)
+FAINT    = (0x5A, 0x66, 0x73)
+ACCENT   = (0x00, 0xD4, 0xAA)
+UP       = (0x4A, 0xDE, 0x80)
+DOWN     = (0xE5, 0x48, 0x4D)
 
 
 def font(size, bold=False):
